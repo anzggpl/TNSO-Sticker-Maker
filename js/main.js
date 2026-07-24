@@ -8,6 +8,7 @@ import { loadTomSelectPaperSize } from './components/tomselect-single.js';
 import { updatePaperSizeDisplay, appPaperSizeManager } from './services/paper_size_manager.js';
 import { appProductLabelManager } from './services/product_label_manager.js';
 import { previewPrintBatch } from './services/printer.js';
+import { excelServiceManager } from './services/excel_service_manager.js';
 
 const PRESET_LABELS = ['Density', 'Size', 'Finish', 'Thickness', 'Weight', 'Colour', 'Fire Rating', 'Standard / Compliance', 'Application', 'Packing'];
 const UNITS = ['mm', 'cm', 'm'];
@@ -272,6 +273,8 @@ window.previewPrintBatch = () => previewPrintBatch(batch);
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  excelServiceManager;
+
   loadTomSelectPaperSize();
 
   appPaperSizeManager.subscribe((newPaper) => {
