@@ -1,26 +1,3 @@
-export class ProductDimension {
-  constructor(t = null, w = null, l = null) {
-    this.t = { val: t?.val ?? '', unit: t?.unit ?? 'mm' };
-    this.w = { val: w?.val ?? '', unit: w?.unit ?? 'mm' };
-    this.l = { val: l?.val ?? '', unit: l?.unit ?? 'mm' };
-  }
-
-  get formattedValue() {
-    const parts = [];
-    if (this.t.val) parts.push(`T ${this.t.val}${this.t.unit}`);
-    if (this.w.val) parts.push(`W ${this.w.val}${this.w.unit}`);
-    if (this.l.val) parts.push(`L ${this.l.val}${this.l.unit}`);
-    return parts.join(' * ');
-  }
-
-  updateAxis(axis, val, unit) {
-    if (this[axis]) {
-      if (val !== undefined) this[axis].val = val;
-      if (unit !== undefined) this[axis].unit = unit;
-    }
-  }
-}
-
 export class LabelDisplayDimension {
   static MIN_WIDTH = 20;
   static MIN_HEIGHT = 15;

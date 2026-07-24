@@ -18,3 +18,8 @@ export const STANDARD_PAPER_SIZES = {
     A5: new PaperSize('A5', 148, 210),
     A6: new PaperSize('A6', 105, 148),
 };
+
+export const LABEL_DISPLAY_MODE = Object.freeze({
+    TEXT: "TEXT",
+    DIMENSION: "DIMENSION",
+});

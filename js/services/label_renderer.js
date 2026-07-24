@@ -1,35 +1,40 @@
 import { BASE_W } from "../constants.js";
 import { KM_LOGO, TNSO_LOGO } from "../constants.js";
 import { escapeHTML } from "../utilities.js";
-import { composeDimsValue } from "../utilities.js";
 
 export function measureNaturalHeight(node) {
-    node.style.position = 'absolute';
-    node.style.visibility = 'hidden';
-    node.style.left = '-99999px';
-    node.style.top = '0';
-    node.style.width = BASE_W + 'px';
-    document.body.appendChild(node);
-    const h = node.offsetHeight;
-    document.body.removeChild(node);
-    return h;
+  node.style.position = 'absolute';
+  node.style.visibility = 'hidden';
+  node.style.left = '-99999px';
+  node.style.top = '0';
+  node.style.width = BASE_W + 'px';
+  document.body.appendChild(node);
+  const h = node.offsetHeight;
+  document.body.removeChild(node);
+  return h;
 }
 
 export function buildLabelNode(productName, activeRows) {
-    const card = document.createElement('div');
-    card.className = 'tnso-label';
-    const specHTML = activeRows.filter(r => {
-        const val = r.mode === 'dims' ? composeDimsValue(r.dims) : r.value;
-        return r.on && (r.label || val);
-    }).map(r => {
-        const val = r.mode === 'dims' ? composeDimsValue(r.dims) : r.value;
-        return `
+  const card = document.createElement('div');
+  card.className = 'tnso-label';
+
+  const specHTML = activeRows
+    .filter(r => {
+      // Checks for 'on' state and ensures either label or value exists
+      const isOn = r.on !== false;
+      const val = r.value; // ProductLabelLine getter formats dims automatically
+      return isOn && (r.label || val);
+    })
+    .map(r => {
+      const val = r.value;
+      return `
     <div class="spec-item">
       <div class="spec-bar"></div>
       <div class="spec-text"><b>${escapeHTML(r.label)}${r.label ? ' : ' : ''}</b><span class="val">${escapeHTML(val)}</span></div>
     </div>`;
     }).join('');
-    card.innerHTML = `
+
+  card.innerHTML = `
     <div class="top">
       <div class="top-left">
         <div class="product-name">${escapeHTML(productName) || 'Product name'}</div>
@@ -47,5 +52,6 @@ export function buildLabelNode(productName, activeRows) {
         <div class="cline"><span><b>Email :</b> <span class="v">contact@t2960.com.sg</span></span></div>
       </div>
     </div>`;
-    return card;
+
+  return card;
 }

@@ -1,6 +1,6 @@
 import { getBatchManifest } from "../utilities.js";
 import { computeGrid } from "./layout_calculator.js";
-import { LabelDisplayDimension } from "../objects/dimension.js";
+import { LabelDisplayDimension } from "../objects/label_display_dimension.js";
 import { PAGE_MARGIN_MM, BASE_W } from "../constants.js";
 import { getDesiredCols } from '../utilities.js';
 import { buildLabelNode } from "./label_renderer.js";

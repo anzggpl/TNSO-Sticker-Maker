@@ -3,11 +3,17 @@ import { STANDARD_PAPER_SIZES } from "../constants.js";
 class PaperSizeManager {
     constructor() {
         this.currentPaper = STANDARD_PAPER_SIZES.A4;
-        this.listeners = [];
+        this.listeners = new Set(); // Using Set auto-prevents duplicate listener callbacks
     }
 
     subscribe(callback) {
-        this.listeners.push(callback);
+        this.listeners.add(callback);
+
+        return () => this.listeners.delete(callback);
+    }
+
+    notify() {
+        this.listeners.forEach(callback => callback(this.currentPaper));
     }
 
     setPaperSize(sizeName) {
@@ -21,7 +27,7 @@ class PaperSizeManager {
 
         // Just swaps a memory reference—super lightweight!
         this.currentPaper = paper;
-        this.listeners.forEach(callback => callback(this.currentPaper));
+        this.notify();
     }
 
     getCurrentSize() {
