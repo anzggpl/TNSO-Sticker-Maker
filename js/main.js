@@ -1,6 +1,8 @@
 import { KM_LOGO, TNSO_LOGO, BASE_W } from './constants.js';
 import {A4_W_MM, A4_H_MM, PAGE_MARGIN_MM} from './constants.js';
 import { computeGrid } from './services/layout_calculator.js';
+import { escapeAttr, escapeHTML } from './utilities.js';
+import { LabelDisplayDimension } from './objects/dimension.js';
 
 function freshDims() {
   return { t: { val: '', unit: 'mm' }, w: { val: '', unit: 'mm' }, l: { val: '', unit: 'mm' } };
@@ -18,9 +20,6 @@ let rows = JSON.parse(JSON.stringify(DEFAULT_ROWS));
 let batch = [];
 let rowIdSeq = 0;
 rows.forEach(r => r.id = rowIdSeq++);
-
-function escapeAttr(str) { return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-function escapeHTML(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 
 function composeDimsValue(dims) {
   const parts = [];
@@ -140,19 +139,7 @@ function buildLabelNode(productName, activeRows) {
   return card;
 }
 
-function measureNaturalHeight(node) {
-  node.style.position = 'absolute';
-  node.style.visibility = 'hidden';
-  node.style.left = '-99999px';
-  node.style.top = '0';
-  node.style.width = BASE_W + 'px';
-  document.body.appendChild(node);
-  const h = node.offsetHeight;
-  document.body.removeChild(node);
-  return h;
-}
-
-// mount a label contain-fit inside a frame of frameWpx x frameHpx
+import { measureNaturalHeight } from './services/label_renderer.js';
 function mountContained(frameEl, productName, activeRows, frameWpx, frameHpx) {
   frameEl.style.width = frameWpx + 'px';
   frameEl.style.height = frameHpx + 'px';
@@ -171,18 +158,10 @@ function mountContained(frameEl, productName, activeRows, frameWpx, frameHpx) {
   return { scale, naturalH };
 }
 
-function getSize() {
-  const wEl = document.getElementById('labelW');
-  const hEl = document.getElementById('labelH');
-  const w = Math.max(20, +(wEl ? wEl.value : 100) || 100);
-  const h = Math.max(15, +(hEl ? hEl.value : 55) || 55);
-  return { w, h };
-}
-
 const PX_PER_MM_PREVIEW = 3.6;
 
 function onSizeChange() {
-  const { w, h } = getSize();
+  const { w, h } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const lbl = document.getElementById('sizeLabel');
   if (lbl) lbl.textContent = `${w} × ${h}mm`;
   updatePreview();
@@ -192,7 +171,7 @@ function onSizeChange() {
 function updatePreview() {
   const nameEl = document.getElementById('productName');
   const name = nameEl ? nameEl.value : '';
-  const { w, h } = getSize();
+  const { w, h } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const frame = document.getElementById('livePreview');
   if (frame) {
     mountContained(frame, name, rows, w * PX_PER_MM_PREVIEW, h * PX_PER_MM_PREVIEW);
@@ -269,7 +248,7 @@ function renderPageLayout() {
     return;
   }
   if (pdfBtn) pdfBtn.disabled = false;
-  const { w: labelW, h: labelH } = getSize();
+  const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const desiredCols = getDesiredCols();
   const { cols, rows, perPage, gap, fitOk } = computeGrid(labelW, labelH, desiredCols);
   const pages = Math.ceil(flat.length / perPage);
@@ -315,7 +294,7 @@ function renderPageLayout() {
 function printBatch() {
   const flat = flattenBatch();
   if (flat.length === 0) { alert('Add at least one label to the batch before printing.'); return; }
-  const { w: labelW, h: labelH } = getSize();
+  const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const desiredCols = getDesiredCols();
   const { cols, rows, perPage, gap } = computeGrid(labelW, labelH, desiredCols);
   const pages = Math.ceil(flat.length / perPage);
@@ -359,7 +338,7 @@ async function exportPDF() {
   }
 
   try {
-    const { w: labelW, h: labelH } = getSize();
+    const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
     const desiredCols = getDesiredCols();
     const { cols, rows, perPage, gap } = computeGrid(labelW, labelH, desiredCols);
     const pages = Math.ceil(flat.length / perPage);
