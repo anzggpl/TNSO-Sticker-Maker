@@ -4,6 +4,7 @@ import { LabelDisplayDimension } from "../objects/dimension.js";
 import { PAGE_MARGIN_MM, BASE_W } from "../constants.js";
 import { getDesiredCols } from '../utilities.js';
 import { buildLabelNode } from "./label_renderer.js";
+import { appPaperSizeManager } from "./paper_size_manager.js";
 
 export async function previewPrintBatch(batch) {
     const manifest = getBatchManifest(batch);
@@ -47,13 +48,22 @@ export async function previewPrintBatch(batch) {
             });
         }
 
-        // 2. Build the precise vector PDF container (Defaulting to A4 Portrait)
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        // 2. Fetch the active dimensions from the singleton and map to array vector format
+        const currentPaper = appPaperSizeManager.getCurrentSize();
+        const pdfFormat = [currentPaper.width, currentPaper.height];
 
-        // 3. Loop through the generated array blocks and render grid cells cleanly
+        // 3. Build the precise vector PDF container using dynamic page dimensions
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            unit: 'mm',
+            format: pdfFormat,
+            orientation: 'portrait'
+        });
+
+        // 4. Loop through the generated array blocks and render grid cells cleanly
         for (let p = 0; p < pages; p++) {
-            if (p > 0) doc.addPage();
+            // Force dynamic page size target constraints across multi-page loops
+            if (p > 0) doc.addPage(pdfFormat, 'portrait');
             const startIdx = p * perPage;
             const items = manifest.slice(startIdx, startIdx + perPage);
 
@@ -78,7 +88,7 @@ export async function previewPrintBatch(batch) {
             });
         }
 
-        // 4. Output the PDF directly into a fresh, standalone browser tab window
+        // 5. Output the PDF directly into a fresh, standalone browser tab window
         const pdfBlob = doc.output('blob');
         const blobURL = URL.createObjectURL(pdfBlob);
         window.open(blobURL, '_blank');

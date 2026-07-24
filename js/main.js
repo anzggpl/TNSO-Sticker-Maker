@@ -6,6 +6,10 @@ import { LabelDisplayDimension } from './objects/dimension.js';
 import { buildLabelNode } from './services/label_renderer.js';
 import { composeDimsValue } from './utilities.js';
 
+import { loadTomSelectPaperSize } from './components/tomselect-single.js';
+import { updatePaperSizeDisplay } from './services/paper_size_manager.js';
+import { appPaperSizeManager } from './services/paper_size_manager.js';
+
 function freshDims() {
   return { t: { val: '', unit: 'mm' }, w: { val: '', unit: 'mm' }, l: { val: '', unit: 'mm' } };
 }
@@ -196,7 +200,7 @@ function renderPageLayout() {
   if (!fitOk) {
     warning = ` &nbsp;·&nbsp; <span style="color:#B8701E;">⚠ ${desiredCols} columns didn't fit at this width — showing ${cols} instead</span>`;
   }
-  summary.innerHTML = `<b>${flat.length}</b> label${flat.length === 1 ? '' : 's'} total &nbsp;·&nbsp; <b>${cols}×${rows}</b> = ${perPage} per A4 sheet &nbsp;·&nbsp; <b>${pages}</b> page${pages === 1 ? '' : 's'} needed${warning}`;
+  summary.innerHTML = `<b>${flat.length}</b> label${flat.length === 1 ? '' : 's'} total &nbsp;·&nbsp; <b>${cols}×${rows}</b> = ${perPage} per sheet &nbsp;·&nbsp; <b>${pages}</b> page${pages === 1 ? '' : 's'} needed${warning}`;
 
   const THUMB_PX_PER_MM = 1.55;
   for (let p = 0; p < pages; p++) {
@@ -238,23 +242,32 @@ window.addToBatch = addToBatch;
 window.clearBatch = clearBatch;
 window.previewPrintBatch = () => previewPrintBatch(batch);
 
+
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  loadTomSelectPaperSize();
+
+  appPaperSizeManager.subscribe((newPaper) => {
+    updatePaperSizeDisplay(newPaper);
+    // onSizeChange(newPaper);
+    // renderPageLayout();
+  });
+
+  const initialPaper = appPaperSizeManager.getCurrentSize();
+  updatePaperSizeDisplay(initialPaper);
+
   renderSpecRowControls();
   onSizeChange();
   renderBatch();
   renderPageLayout();
 
-  // Attach event listeners to input elements if present
-  const productName = document.getElementById('productName');
-  if (productName) productName.addEventListener('input', updatePreview);
+  const attachListener = (id, event, handler) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+  };
 
-  const labelW = document.getElementById('labelW');
-  if (labelW) labelW.addEventListener('input', onSizeChange);
-
-  const labelH = document.getElementById('labelH');
-  if (labelH) labelH.addEventListener('input', onSizeChange);
-
-  const colsInput = document.getElementById('colsInput');
-  if (colsInput) colsInput.addEventListener('input', renderPageLayout);
+  attachListener('productName', 'input', updatePreview);
+  attachListener('labelW', 'input', onSizeChange);
+  attachListener('labelH', 'input', onSizeChange);
+  attachListener('colsInput', 'input', renderPageLayout);
 });

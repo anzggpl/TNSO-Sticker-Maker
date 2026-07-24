@@ -43,7 +43,7 @@ export function buildLabelNode(productName, activeRows) {
       <div class="vbar"></div>
       <div class="contact">
         <div class="cline"><span><b>Tel :</b> <span class="v">6267 1300</span></span><span><b>Fax :</b> <span class="v">6264 2960</span></span></div>
-        <div class="cline"><span><b>Add :</b> <span class="v">21 Tuas West Ave Singapore 638435</span></span></div>
+        <div class="cline"><span><b>Address :</b> <span class="v">21 Tuas West Ave Singapore 638435</span></span></div>
         <div class="cline"><span><b>Email :</b> <span class="v">contact@t2960.com.sg</span></span></div>
       </div>
     </div>`;

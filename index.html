@@ -13,6 +13,9 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.2/dist/js/tom-select.complete.min.js"></script>
 </head>
 
 <body>
@@ -21,13 +24,14 @@
   <div class="panel">
     <div class="brand"><span class="mark"></span><h1>TNSO Label Generator</h1></div>
     <p class="sub">Logos, colours and layout are fixed. Set the physical size, fill in the product, and choose how many you need.</p>
-
+    <div class="section-title">Paper Print Size</div>
+    <select id="paper-size-select" autocomplete="off" placeholder="Select Paper Size"></select>
     <div class="section-title">Label size</div>
     <div class="two-up">
       <div><label class="f">Width (mm)</label><input type="number" id="labelW" value="95" min="20" max="200" oninput="onSizeChange()"></div>
       <div><label class="f">Height (mm)</label><input type="number" id="labelH" value="50" min="15" max="200" oninput="onSizeChange()"></div>
     </div>
-    <label class="f" style="margin-top:12px;">Columns per A4 page</label>
+    <label class="f" style="margin-top:12px;">Columns per page</label>
     <input type="number" id="colsInput" value="2" min="1" max="6" oninput="onSizeChange()">
 
     <div class="section-title">Product</div>
@@ -69,7 +73,7 @@
 
     <div class="workspace-header">
       <div>
-        <h2>A4 page layout (auto-arranged)</h2>
+        <h2 id="page-layout-heading">A4 page layout (auto-arranged)</h2>
         <p>How your batch will be laid out for printing.</p>
       </div>
       <div class="actions">
