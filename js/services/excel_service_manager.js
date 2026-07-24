@@ -1,5 +1,5 @@
 class ExcelServiceManager {
-    constructor(filePath = '../backend/product_master.xlsx', tableName = 'ProductMaster') {
+    constructor(filePath = 'backend/product_master.xlsx', tableName = 'ProductMaster') {
         this.filePath = filePath;
         this.tableName = tableName;
 
