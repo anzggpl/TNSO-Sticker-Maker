@@ -1,8 +1,10 @@
 import { KM_LOGO, TNSO_LOGO, BASE_W } from './constants.js';
-import {A4_W_MM, A4_H_MM, PAGE_MARGIN_MM} from './constants.js';
+import { A4_W_MM, A4_H_MM, PAGE_MARGIN_MM } from './constants.js';
 import { computeGrid } from './services/layout_calculator.js';
 import { escapeAttr, escapeHTML } from './utilities.js';
 import { LabelDisplayDimension } from './objects/dimension.js';
+import { buildLabelNode } from './services/label_renderer.js';
+import { composeDimsValue } from './utilities.js';
 
 function freshDims() {
   return { t: { val: '', unit: 'mm' }, w: { val: '', unit: 'mm' }, l: { val: '', unit: 'mm' } };
@@ -20,14 +22,6 @@ let rows = JSON.parse(JSON.stringify(DEFAULT_ROWS));
 let batch = [];
 let rowIdSeq = 0;
 rows.forEach(r => r.id = rowIdSeq++);
-
-function composeDimsValue(dims) {
-  const parts = [];
-  if (dims.t.val !== '' && dims.t.val != null) parts.push(`T ${dims.t.val}${dims.t.unit}`);
-  if (dims.w.val !== '' && dims.w.val != null) parts.push(`W ${dims.w.val}${dims.w.unit}`);
-  if (dims.l.val !== '' && dims.l.val != null) parts.push(`L ${dims.l.val}${dims.l.unit}`);
-  return parts.join(' * ');
-}
 
 function renderSpecRowControls() {
   const wrap = document.getElementById('specRows');
@@ -101,43 +95,7 @@ function renderSpecRowControls() {
 function addSpecRow() { rows.push({ id: rowIdSeq++, label: '', value: '', on: true, mode: 'text' }); renderSpecRowControls(); updatePreview(); }
 
 // ---------- build the fixed-design label DOM node ----------
-function buildLabelNode(productName, activeRows) {
-  const kmLogoSrc = KM_LOGO;
-  const tnsoLogoSrc = TNSO_LOGO;
 
-  const card = document.createElement('div');
-  card.className = 'tnso-label';
-  const specHTML = activeRows.filter(r => {
-    const val = r.mode === 'dims' ? composeDimsValue(r.dims) : r.value;
-    return r.on && (r.label || val);
-  }).map(r => {
-    const val = r.mode === 'dims' ? composeDimsValue(r.dims) : r.value;
-    return `
-    <div class="spec-item">
-      <div class="spec-bar"></div>
-      <div class="spec-text"><b>${escapeHTML(r.label)}${r.label ? ' : ' : ''}</b><span class="val">${escapeHTML(val)}</span></div>
-    </div>`;
-  }).join('');
-  card.innerHTML = `
-    <div class="top">
-      <div class="top-left">
-        <div class="product-name">${escapeHTML(productName) || 'Product name'}</div>
-        <div class="spec-list">${specHTML}</div>
-      </div>
-      <div class="km-logo"><img src="${kmLogoSrc}" alt="KM Performance Choice"></div>
-    </div>
-    <div class="divider"></div>
-    <div class="bottom">
-      <div class="tnso-logo"><img src="${tnsoLogoSrc}" alt="TwoNine SixO"></div>
-      <div class="vbar"></div>
-      <div class="contact">
-        <div class="cline"><span><b>Tel :</b> <span class="v">6267 1300</span></span><span><b>Fax :</b> <span class="v">6264 2960</span></span></div>
-        <div class="cline"><span><b>Add :</b> <span class="v">21 Tuas West Ave Singapore 638435</span></span></div>
-        <div class="cline"><span><b>Email :</b> <span class="v">contact@t2960.com.sg</span></span></div>
-      </div>
-    </div>`;
-  return card;
-}
 
 import { measureNaturalHeight } from './services/label_renderer.js';
 function mountContained(frameEl, productName, activeRows, frameWpx, frameHpx) {
@@ -220,34 +178,16 @@ function renderBatch() {
   });
 }
 
-
-
-
-function getDesiredCols() {
-  const colEl = document.getElementById('colsInput');
-  return Math.max(1, Math.min(6, +(colEl ? colEl.value : 2) || 2));
-}
-
-function flattenBatch() {
-  const flat = [];
-  batch.forEach(entry => { for (let i = 0; i < entry.qty; i++) flat.push(entry); });
-  return flat;
-}
+import { getBatchManifest } from './utilities.js';
+import { getDesiredCols } from './utilities.js';
 
 function renderPageLayout() {
   const summary = document.getElementById('layoutSummary');
   const wrap = document.getElementById('pagesWrap');
   if (!wrap || !summary) return;
   wrap.innerHTML = '';
-  const flat = flattenBatch();
-  const pdfBtn = document.getElementById('pdfBtn');
+  const flat = getBatchManifest(batch);
 
-  if (flat.length === 0) {
-    summary.textContent = 'Add labels to the batch to see the page layout.';
-    if (pdfBtn) pdfBtn.disabled = true;
-    return;
-  }
-  if (pdfBtn) pdfBtn.disabled = false;
   const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const desiredCols = getDesiredCols();
   const { cols, rows, perPage, gap, fitOk } = computeGrid(labelW, labelH, desiredCols);
@@ -290,111 +230,13 @@ function renderPageLayout() {
   }
 }
 
-// ---------------- Print ----------------
-function printBatch() {
-  const flat = flattenBatch();
-  if (flat.length === 0) { alert('Add at least one label to the batch before printing.'); return; }
-  const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
-  const desiredCols = getDesiredCols();
-  const { cols, rows, perPage, gap } = computeGrid(labelW, labelH, desiredCols);
-  const pages = Math.ceil(flat.length / perPage);
-  const sheet = document.getElementById('printSheet');
-  if (!sheet) return;
-  sheet.innerHTML = '';
-  const PX_PER_MM = 3.78;
-
-  for (let p = 0; p < pages; p++) {
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 'print-page';
-    const startIdx = p * perPage;
-    const items = flat.slice(startIdx, startIdx + perPage);
-    items.forEach((entry, i) => {
-      const r = Math.floor(i / cols), c = i % cols;
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.style.left = (PAGE_MARGIN_MM + c * (labelW + gap)) + 'mm';
-      cell.style.top = (PAGE_MARGIN_MM + r * (labelH + gap)) + 'mm';
-      cell.style.width = labelW + 'mm';
-      cell.style.height = labelH + 'mm';
-      pageDiv.appendChild(cell);
-      mountContained(cell, entry.name, entry.rows, labelW * PX_PER_MM, labelH * PX_PER_MM);
-      cell.style.overflow = 'hidden';
-    });
-    sheet.appendChild(pageDiv);
-  }
-  window.print();
-}
-
-// ---------------- PDF export ----------------
-async function exportPDF() {
-  const flat = flattenBatch();
-  if (flat.length === 0) { alert('Add at least one label to the batch before exporting.'); return; }
-  const btn = document.getElementById('pdfBtn');
-  let oldText = '';
-  if (btn) {
-    btn.disabled = true;
-    oldText = btn.textContent;
-    btn.textContent = 'Rendering…';
-  }
-
-  try {
-    const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
-    const desiredCols = getDesiredCols();
-    const { cols, rows, perPage, gap } = computeGrid(labelW, labelH, desiredCols);
-    const pages = Math.ceil(flat.length / perPage);
-
-    const cache = new Map();
-    for (const entry of batch) {
-      if (cache.has(entry.id)) continue;
-      const node = buildLabelNode(entry.name, entry.rows);
-      node.style.width = BASE_W + 'px';
-      node.style.position = 'absolute';
-      node.style.left = '-99999px';
-      node.style.top = '0';
-      document.body.appendChild(node);
-      await new Promise(r => setTimeout(r, 30));
-      const canvas = await html2canvas(node, { scale: 3, backgroundColor: '#ffffff', useCORS: true });
-      document.body.removeChild(node);
-      cache.set(entry.id, { dataUrl: canvas.toDataURL('image/png'), aspect: canvas.height / canvas.width });
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-    for (let p = 0; p < pages; p++) {
-      if (p > 0) doc.addPage();
-      const startIdx = p * perPage;
-      const items = flat.slice(startIdx, startIdx + perPage);
-      items.forEach((entry, i) => {
-        const r = Math.floor(i / cols), c = i % cols;
-        const cellX = PAGE_MARGIN_MM + c * (labelW + gap);
-        const cellY = PAGE_MARGIN_MM + r * (labelH + gap);
-        const { dataUrl, aspect } = cache.get(entry.id);
-        let drawW = labelW, drawH = labelW * aspect;
-        if (drawH > labelH) { drawH = labelH; drawW = labelH / aspect; }
-        const offX = cellX + (labelW - drawW) / 2;
-        const offY = cellY + (labelH - drawH) / 2;
-        doc.addImage(dataUrl, 'PNG', offX, offY, drawW, drawH);
-      });
-    }
-    doc.save('labels.pdf');
-  } catch (err) {
-    console.error(err);
-    alert('Something went wrong generating the PDF. Please try again.');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = oldText;
-    }
-  }
-}
+import { previewPrintBatch } from './services/printer.js';
 
 // Attach functions to global window so button onclick="" handlers work
 window.addSpecRow = addSpecRow;
 window.addToBatch = addToBatch;
 window.clearBatch = clearBatch;
-window.printBatch = printBatch;
-window.exportPDF = exportPDF;
+window.previewPrintBatch = () => previewPrintBatch(batch);
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
