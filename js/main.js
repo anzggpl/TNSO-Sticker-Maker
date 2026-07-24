@@ -1,5 +1,5 @@
-import { KM_LOGO, TNSO_LOGO, BASE_W } from './constants.js';
-import { A4_W_MM, A4_H_MM, PAGE_MARGIN_MM } from './constants.js';
+import { BASE_W } from './constants.js';
+import { PAGE_MARGIN_MM } from './constants.js';
 import { computeGrid } from './services/layout_calculator.js';
 import { escapeAttr, escapeHTML } from './utilities.js';
 import { LabelDisplayDimension } from './objects/dimension.js';
@@ -9,6 +9,7 @@ import { composeDimsValue } from './utilities.js';
 import { loadTomSelectPaperSize } from './components/tomselect-single.js';
 import { updatePaperSizeDisplay } from './services/paper_size_manager.js';
 import { appPaperSizeManager } from './services/paper_size_manager.js';
+import { previewPrintBatch } from './services/printer.js';
 
 function freshDims() {
   return { t: { val: '', unit: 'mm' }, w: { val: '', unit: 'mm' }, l: { val: '', unit: 'mm' } };
@@ -189,13 +190,20 @@ function renderPageLayout() {
   const summary = document.getElementById('layoutSummary');
   const wrap = document.getElementById('pagesWrap');
   if (!wrap || !summary) return;
+
+  // Clear layout wrapper prior to execution loop
   wrap.innerHTML = '';
+
   const flat = getBatchManifest(batch);
+  const currentPaper = appPaperSizeManager.getCurrentSize();
 
   const { w: labelW, h: labelH } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const desiredCols = getDesiredCols();
   const { cols, rows, perPage, gap, fitOk } = computeGrid(labelW, labelH, desiredCols);
-  const pages = Math.ceil(flat.length / perPage);
+
+  // Guard clause for early returns if no labels or no pages are present
+  const pages = Math.ceil(flat.length / perPage) || 1;
+
   let warning = '';
   if (!fitOk) {
     warning = ` &nbsp;·&nbsp; <span style="color:#B8701E;">⚠ ${desiredCols} columns didn't fit at this width — showing ${cols} instead</span>`;
@@ -203,38 +211,53 @@ function renderPageLayout() {
   summary.innerHTML = `<b>${flat.length}</b> label${flat.length === 1 ? '' : 's'} total &nbsp;·&nbsp; <b>${cols}×${rows}</b> = ${perPage} per sheet &nbsp;·&nbsp; <b>${pages}</b> page${pages === 1 ? '' : 's'} needed${warning}`;
 
   const THUMB_PX_PER_MM = 1.55;
+  const scale = THUMB_PX_PER_MM;
+
+  // Use a Fragment buffer to prevent intermediate browser repaints
+  const fragment = document.createDocumentFragment();
+
   for (let p = 0; p < pages; p++) {
     const pageDiv = document.createElement('div');
-    pageDiv.className = 'a4-page';
-    pageDiv.style.width = (A4_W_MM * THUMB_PX_PER_MM) + 'px';
-    pageDiv.style.height = (A4_H_MM * THUMB_PX_PER_MM) + 'px';
-    pageDiv.style.padding = (PAGE_MARGIN_MM * THUMB_PX_PER_MM) + 'px';
+
+    // Dynamically sets the preview container class name matching the paper token
+    pageDiv.className = `${currentPaper.name.toLowerCase()}-page`;
+
+    // Apply dynamic scaled dimensions based on active singleton configuration
+    pageDiv.style.width = `${currentPaper.width * scale}px`;
+    pageDiv.style.height = `${currentPaper.height * scale}px`;
+    pageDiv.style.padding = `${PAGE_MARGIN_MM * scale}px`;
     pageDiv.style.display = 'grid';
-    pageDiv.style.gridTemplateColumns = `repeat(${cols}, ${labelW * THUMB_PX_PER_MM}px)`;
-    pageDiv.style.gridAutoRows = `${labelH * THUMB_PX_PER_MM}px`;
-    pageDiv.style.gap = (gap * THUMB_PX_PER_MM) + 'px';
     pageDiv.style.alignContent = 'start';
+    pageDiv.style.gap = `${gap * scale}px`;
+
+    // Explicit sizing tracks help the layout engine map constraints efficiently
+    pageDiv.style.gridTemplateColumns = `repeat(${cols}, ${labelW * scale}px)`;
+    pageDiv.style.gridTemplateRows = `repeat(${rows}, ${labelH * scale}px)`;
 
     const startIdx = p * perPage;
     const items = flat.slice(startIdx, startIdx + perPage);
+
     items.forEach(entry => {
       const cell = document.createElement('div');
       cell.className = 'cell';
       pageDiv.appendChild(cell);
-      mountContained(cell, entry.name, entry.rows, labelW * THUMB_PX_PER_MM, labelH * THUMB_PX_PER_MM);
+      mountContained(cell, entry.name, entry.rows, labelW * scale, labelH * scale);
     });
 
     const col = document.createElement('div');
     col.appendChild(pageDiv);
+
     const cap = document.createElement('div');
     cap.className = 'page-label';
     cap.textContent = `Page ${p + 1} of ${pages}`;
-    col.appendChild(cap);
-    wrap.appendChild(col);
-  }
-}
 
-import { previewPrintBatch } from './services/printer.js';
+    col.appendChild(cap);
+    fragment.appendChild(col);
+  }
+
+  // Inject everything cleanly into the display wrapper in one paint transaction
+  wrap.appendChild(fragment);
+}
 
 // Attach functions to global window so button onclick="" handlers work
 window.addSpecRow = addSpecRow;
@@ -250,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
   appPaperSizeManager.subscribe((newPaper) => {
     updatePaperSizeDisplay(newPaper);
     // onSizeChange(newPaper);
-    // renderPageLayout();
+    renderPageLayout();
   });
 
   const initialPaper = appPaperSizeManager.getCurrentSize();

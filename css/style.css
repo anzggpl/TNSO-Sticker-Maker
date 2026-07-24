@@ -124,12 +124,14 @@
   .layout-summary{font-size:12.5px;color:var(--slate);margin-bottom:16px;background:#FCFCFA;border:1px solid var(--line);border-radius:7px;padding:10px 14px;}
   .layout-summary b{color:var(--ink);}
   .pages-wrap{display:flex;flex-wrap:wrap;gap:22px;}
-  .a4-page{
-    background:#fff;border:1px solid #C9C7BE;box-shadow:0 2px 8px rgba(0,0,0,.08);
+
+  [class*="-page"] {
+    background:#ffffff;border:1px solid #C9C7BE;box-shadow:0 2px 8px rgba(0,0,0,.08);
     position:relative;flex-shrink:0;
   }
-  .a4-page .cell{position:relative;overflow:hidden;outline:1px dashed #D8D9D4;}
-  .a4-page .cell .tnso-label{position:absolute;top:0;left:0;}
+  [class*="-page"] .cell{position:relative;overflow:hidden;outline:1px dashed #D8D9D4;}
+  [class*="-page"] .cell .tnso-label{position:absolute;top:0;left:0;}
+
   .page-label{font-size:11px;color:var(--slate);text-align:center;margin-top:6px;}
 
   #printSheet{display:none;}

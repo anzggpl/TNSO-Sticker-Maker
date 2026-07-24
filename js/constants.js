@@ -5,8 +5,6 @@ export const TNSO_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAdQAAADh
 
 export const BASE_W = 860;
 
-export const A4_W_MM = 210;
-export const A4_H_MM = 297;
 export const PAGE_MARGIN_MM = 5;
 export const DEFAULT_GAP_MM = 3;
 export const MIN_GAP_MM = 1;
