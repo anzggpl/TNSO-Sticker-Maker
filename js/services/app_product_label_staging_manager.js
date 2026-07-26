@@ -1,7 +1,7 @@
 import { LABEL_DISPLAY_MODE } from "../constants.js";
 import { ProductLabelLine } from "../objects/product_label_line.js";
 
-export class ProductLabelManager {
+export class AppProductLabelStagingManager {
     static DEFAULT_LABEL = "MW MINERAL WOOL";
 
     static DEFAULT_ROWS = [
@@ -16,9 +16,9 @@ export class ProductLabelManager {
         { label: 'Finish', value: 'PLAIN', on: true, mode: LABEL_DISPLAY_MODE.TEXT },
     ];
 
-    constructor(initialName = ProductLabelManager.DEFAULT_LABEL) {
+    constructor(initialName = AppProductLabelStagingManager.DEFAULT_LABEL) {
         this._name = initialName.trim();
-        this.rows = ProductLabelManager.DEFAULT_ROWS.map(row => new ProductLabelLine(row));
+        this.rows = AppProductLabelStagingManager.DEFAULT_ROWS.map(row => new ProductLabelLine(row));
         this.listeners = [];
     }
 
@@ -76,4 +76,4 @@ export class ProductLabelManager {
     }
 }
 
-export const appProductLabelManager = new ProductLabelManager();
+export const appProductLabelStagingManager = new AppProductLabelStagingManager();

@@ -4,9 +4,9 @@ import { escapeAttr, escapeHTML, getBatchManifest, getDesiredCols } from './util
 import { LabelDisplayDimension } from './objects/label_display_dimension.js';
 import { buildLabelNode, measureNaturalHeight } from './services/label_renderer.js';
 
-import { loadTomSelectPaperSize } from './components/tomselect-single.js';
+import { loadTomSelectPaperSize } from './components/tomselect_papers_size.js';
 import { updatePaperSizeDisplay, appPaperSizeManager } from './services/paper_size_manager.js';
-import { appProductLabelManager } from './services/product_label_manager.js';
+import { appProductLabelStagingManager } from './services/app_product_label_staging_manager.js';
 import { previewPrintBatch } from './services/printer.js';
 import { excelServiceManager } from './services/excel_service_manager.js';
 
@@ -21,7 +21,7 @@ function renderSpecRowControls() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  const rows = appProductLabelManager.getRows();
+  const rows = appProductLabelStagingManager.getRows();
 
   rows.forEach(r => {
     const el = document.createElement('div');
@@ -70,32 +70,32 @@ function renderSpecRowControls() {
 
     el.querySelector('[data-role=on]').addEventListener('change', e => {
       r.on = e.target.checked;
-      appProductLabelManager.notify();
+      appProductLabelStagingManager.notify();
     });
 
     el.querySelector('[data-role=label]').addEventListener('input', e => {
       r.label = e.target.value;
-      appProductLabelManager.notify();
+      appProductLabelStagingManager.notify();
     });
 
     el.querySelector('[data-role=rm]').addEventListener('click', () => {
-      appProductLabelManager.removeRow(r.id);
+      appProductLabelStagingManager.removeRow(r.id);
       renderSpecRowControls();
     });
 
     if (isDimsMode) {
-      el.querySelector('[data-role=dim-t-val]').addEventListener('input', e => { r.dims.updateAxis('t', e.target.value); appProductLabelManager.notify(); });
-      el.querySelector('[data-role=dim-w-val]').addEventListener('input', e => { r.dims.updateAxis('w', e.target.value); appProductLabelManager.notify(); });
-      el.querySelector('[data-role=dim-l-val]').addEventListener('input', e => { r.dims.updateAxis('l', e.target.value); appProductLabelManager.notify(); });
-      el.querySelector('[data-role=dim-t-unit]').addEventListener('change', e => { r.dims.updateAxis('t', undefined, e.target.value); appProductLabelManager.notify(); });
-      el.querySelector('[data-role=dim-w-unit]').addEventListener('change', e => { r.dims.updateAxis('w', undefined, e.target.value); appProductLabelManager.notify(); });
-      el.querySelector('[data-role=dim-l-unit]').addEventListener('change', e => { r.dims.updateAxis('l', undefined, e.target.value); appProductLabelManager.notify(); });
+      el.querySelector('[data-role=dim-t-val]').addEventListener('input', e => { r.dims.updateAxis('t', e.target.value); appProductLabelStagingManager.notify(); });
+      el.querySelector('[data-role=dim-w-val]').addEventListener('input', e => { r.dims.updateAxis('w', e.target.value); appProductLabelStagingManager.notify(); });
+      el.querySelector('[data-role=dim-l-val]').addEventListener('input', e => { r.dims.updateAxis('l', e.target.value); appProductLabelStagingManager.notify(); });
+      el.querySelector('[data-role=dim-t-unit]').addEventListener('change', e => { r.dims.updateAxis('t', undefined, e.target.value); appProductLabelStagingManager.notify(); });
+      el.querySelector('[data-role=dim-w-unit]').addEventListener('change', e => { r.dims.updateAxis('w', undefined, e.target.value); appProductLabelStagingManager.notify(); });
+      el.querySelector('[data-role=dim-l-unit]').addEventListener('change', e => { r.dims.updateAxis('l', undefined, e.target.value); appProductLabelStagingManager.notify(); });
     } else {
-      el.querySelector('[data-role=value]').addEventListener('input', e => { r.value = e.target.value; appProductLabelManager.notify(); });
+      el.querySelector('[data-role=value]').addEventListener('input', e => { r.value = e.target.value; appProductLabelStagingManager.notify(); });
     }
 
     el.querySelector('[data-role=mode-switch]').addEventListener('click', () => {
-      appProductLabelManager.toggleRowMode(r.id);
+      appProductLabelStagingManager.toggleRowMode(r.id);
       renderSpecRowControls(); // Re-render DOM control elements on mode toggle
     });
 
@@ -104,7 +104,7 @@ function renderSpecRowControls() {
 }
 
 function addSpecRow() {
-  appProductLabelManager.addRow();
+  appProductLabelStagingManager.addRow();
   renderSpecRowControls();
 }
 
@@ -135,8 +135,8 @@ function onSizeChange() {
 }
 
 function updatePreview() {
-  const name = appProductLabelManager.name;
-  const rows = appProductLabelManager.getRows();
+  const name = appProductLabelStagingManager.name;
+  const rows = appProductLabelStagingManager.getRows();
   const { w, h } = LabelDisplayDimension.fromDefaultIDs().dimensions;
   const frame = document.getElementById('livePreview');
   if (frame) {
@@ -146,11 +146,11 @@ function updatePreview() {
 
 function addToBatch() {
   const qtyEl = document.getElementById('qtyInput');
-  const name = appProductLabelManager.name;
+  const name = appProductLabelStagingManager.name;
   const qty = Math.max(1, +(qtyEl?.value) || 1);
 
   // Capture clean, plain snapshots with pre-evaluated values
-  const snapshottedRows = appProductLabelManager.getRows().map(r => ({
+  const snapshottedRows = appProductLabelStagingManager.getRows().map(r => ({
     id: r.id,
     label: r.label,
     value: r.value, // Freezes the calculated value string right now
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPageLayout();
   });
 
-  appProductLabelManager.subscribe(() => {
+  appProductLabelStagingManager.subscribe(() => {
     updatePreview();
     renderPageLayout();
   });
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   attachListener('productName', 'input', (e) => {
-    appProductLabelManager.setName(e.target.value);
+    appProductLabelStagingManager.setName(e.target.value);
   });
   attachListener('labelW', 'input', onSizeChange);
   attachListener('labelH', 'input', onSizeChange);
