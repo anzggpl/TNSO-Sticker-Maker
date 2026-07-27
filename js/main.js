@@ -307,4 +307,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   attachListener('labelW', 'input', onSizeChange);
   attachListener('labelH', 'input', onSizeChange);
   attachListener('colsInput', 'input', renderPageLayout);
+
+  attachListener('qtyInput', 'input', (e) => {
+    appProductLabelStagingManager.updateQtyPerBatchFromInput(e.target.value);
+  });
 });

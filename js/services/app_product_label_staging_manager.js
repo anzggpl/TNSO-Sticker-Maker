@@ -91,6 +91,17 @@ class AppProductLabelStagingManager {
         }
     }
 
+    updateQtyPerBatchFromInput(value) {
+        const parsed = parseInt(value, 10);
+
+        const cleanQty = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+
+        if (this.qty_per_batch !== cleanQty) {
+            this.qty_per_batch = cleanQty;
+            this.notify();
+        }
+    }
+
     setStagedProductLabel(productLabel) {
         this._name = productLabel.getProductName();
         this.setLabelDisplayDimension(productLabel);
