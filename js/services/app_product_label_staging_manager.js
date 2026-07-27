@@ -42,6 +42,8 @@ class AppProductLabelStagingManager {
 
     setName(name) {
         this._name = name;
+        const productNameEl = document.getElementById('productName');
+        productNameEl.value = name;
         this.notify();
     }
 
@@ -103,7 +105,7 @@ class AppProductLabelStagingManager {
     }
 
     setStagedProductLabel(productLabel) {
-        this._name = productLabel.getProductName();
+        this.setName(productLabel.getProductName());
         this.setLabelDisplayDimension(productLabel);
         this.setQtyPerBatch(productLabel.getQtyPerBatch());
         const incomingRows = productLabel.getRows();
