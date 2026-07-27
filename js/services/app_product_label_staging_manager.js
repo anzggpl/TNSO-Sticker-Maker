@@ -1,7 +1,7 @@
 import { LABEL_DISPLAY_MODE } from "../constants.js";
 import { ProductLabelLine } from "../objects/product_label_line.js";
-
-export class AppProductLabelStagingManager {
+import { LabelDisplayDimension } from "../objects/label_display_dimension.js";
+class AppProductLabelStagingManager {
     static DEFAULT_LABEL = "MW MINERAL WOOL";
 
     static DEFAULT_ROWS = [
@@ -20,18 +20,16 @@ export class AppProductLabelStagingManager {
         this._name = initialName.trim();
         this.rows = AppProductLabelStagingManager.DEFAULT_ROWS.map(row => new ProductLabelLine(row));
         this.listeners = [];
+        this.labelDisplayDimension = new LabelDisplayDimension()
+        this.qty_per_batch = 1;
     }
 
     get name() {
         return this._name;
     }
 
-    set name(newName) {
-        const trimmed = (newName || '').trim();
-        if (trimmed) {
-            this._name = trimmed;
-            this.notify();
-        }
+    getQtyPerBatch() {
+        return this.qty_per_batch;
     }
 
     subscribe(callback) {
@@ -43,7 +41,8 @@ export class AppProductLabelStagingManager {
     }
 
     setName(name) {
-        this.name = name;
+        this._name = name;
+        this.notify();
     }
 
     getRows() {
@@ -72,6 +71,32 @@ export class AppProductLabelStagingManager {
         } else {
             row.mode = LABEL_DISPLAY_MODE.DIMENSION;
         }
+        this.notify();
+    }
+
+    setLabelDisplayDimension(productLabel) {
+        this.labelDisplayDimension.setDisplayDimensions({ w: productLabel.label_width, h: productLabel.label_height })
+        const wEl = document.getElementById('labelW');
+        const hEl = document.getElementById('labelH');
+
+        wEl.value = productLabel.label_width;
+        hEl.value = productLabel.label_height;
+    }
+
+    setQtyPerBatch(qty_per_batch) {
+        this.qty_per_batch = qty_per_batch;
+        const qtyEl = document.getElementById('qtyInput');
+        if (qtyEl) {
+            qtyEl.value = qty_per_batch;
+        }
+    }
+
+    setStagedProductLabel(productLabel) {
+        this._name = productLabel.getProductName();
+        this.setLabelDisplayDimension(productLabel);
+        this.setQtyPerBatch(productLabel.getQtyPerBatch());
+        const incomingRows = productLabel.getRows();
+        this.rows = incomingRows.map(row => row.clone());
         this.notify();
     }
 }

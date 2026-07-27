@@ -31,3 +31,8 @@ export function composeDimsValue(dims) {
     if (dims.l.val !== '' && dims.l.val != null) parts.push(`L ${dims.l.val}${dims.l.unit}`);
     return parts.join(' * ');
 }
+
+export function capitalize(text) {
+    if (!text) return '';
+    return String(text).toUpperCase();
+}

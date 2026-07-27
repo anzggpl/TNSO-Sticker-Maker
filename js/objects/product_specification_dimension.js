@@ -24,4 +24,12 @@ export class ProductSpecificationDimension {
             if (unit !== undefined) this[axis].unit = unit;
         }
     }
+
+    clone() {
+        return new ProductSpecificationDimension(
+            { ...this.t },
+            { ...this.w },
+            { ...this.l }
+        );
+    }
 }

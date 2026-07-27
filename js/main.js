@@ -145,9 +145,8 @@ function updatePreview() {
 }
 
 function addToBatch() {
-  const qtyEl = document.getElementById('qtyInput');
   const name = appProductLabelStagingManager.name;
-  const qty = Math.max(1, +(qtyEl?.value) || 1);
+  const qty = appProductLabelStagingManager.getQtyPerBatch();
 
   // Capture clean, plain snapshots with pre-evaluated values
   const snapshottedRows = appProductLabelStagingManager.getRows().map(r => ({
@@ -271,10 +270,10 @@ window.addToBatch = addToBatch;
 window.clearBatch = clearBatch;
 window.previewPrintBatch = () => previewPrintBatch(batch);
 
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  excelServiceManager;
-
+import { productLabelDataTableManager } from './services/product_label_datatable_manager.js';
+import { loadTomSelectProductLabel } from './components/tomselect_product_label.js';
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadTomSelectProductLabel();
   loadTomSelectPaperSize();
 
   appPaperSizeManager.subscribe((newPaper) => {
@@ -283,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   appProductLabelStagingManager.subscribe(() => {
+    onSizeChange();
+    renderSpecRowControls();
     updatePreview();
     renderPageLayout();
   });

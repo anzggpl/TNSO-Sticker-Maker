@@ -29,4 +29,9 @@ export class LabelDisplayDimension {
   get dimensions() {
     return { w: this.w, h: this.h };
   }
+
+  setDisplayDimensions({ w = LabelDisplayDimension.DEFAULT_WIDTH, h = LabelDisplayDimension.DEFAULT_HEIGHT }) {
+    this.w = w;
+    this.h = h;
+  }
 }

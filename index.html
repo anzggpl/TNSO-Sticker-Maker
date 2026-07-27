@@ -25,19 +25,21 @@
   <div class="panel">
     <div class="brand"><span class="mark"></span><h1>TNSO Label Generator</h1></div>
     <p class="sub">Logos, colours and layout are fixed. Set the physical size, fill in the product, and choose how many you need.</p>
+    <div class="section-title">Existing Product Label</div>
+    <select id="product-label-select" autocomplete="off" placeholder="Select Product Label"></select>
     <div class="section-title">Paper Print Size</div>
     <select id="paper-size-select" autocomplete="off" placeholder="Select Paper Size"></select>
     <div class="section-title">Label size</div>
     <div class="two-up">
-      <div><label class="f">Width (mm)</label><input type="number" id="labelW" value="95" min="20" max="200" oninput="onSizeChange()"></div>
-      <div><label class="f">Height (mm)</label><input type="number" id="labelH" value="50" min="15" max="200" oninput="onSizeChange()"></div>
+      <div><label class="f">Width (mm)</label><input type="number" id="labelW" value="95" min="20" max="200"></div>
+      <div><label class="f">Height (mm)</label><input type="number" id="labelH" value="50" min="15" max="200"></div>
     </div>
     <label class="f" style="margin-top:12px;">Columns per page</label>
-    <input type="number" id="colsInput" value="2" min="1" max="6" oninput="onSizeChange()">
+    <input type="number" id="colsInput" value="2" min="1" max="6">
 
     <div class="section-title">Product</div>
     <label class="f">Product name</label>
-    <input type="text" id="productName" value="Mineral Wool" oninput="updatePreview()">
+    <input type="text" id="productName" value="Mineral Wool">
 
     <div class="section-title">Spec rows — tick what applies</div>
     <div id="specRows"></div>
